@@ -13,6 +13,11 @@ RUN pecl install redis && docker-php-ext-enable redis
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+COPY docker/php/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+ENTRYPOINT ["entrypoint.sh"]
+
 # DO NOT run composer install here when using volumes
 
 CMD ["php-fpm"]
