@@ -5,9 +5,12 @@ services:
       dockerfile: docker/php/Dockerfile
     volumes:
       - .:/var/www
+    ports:
+      - "5173:5173"
     working_dir: /var/www
     depends_on:
       - db
+      - redis
 
   web:
     image: nginx:alpine
@@ -19,11 +22,42 @@ services:
     depends_on:
       - app
 
+
   db:
     image: mysql:8
     restart: always
     environment:
       MYSQL_DATABASE: laravel
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
       MYSQL_ROOT_PASSWORD: root
     ports:
       - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  worker:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    volumes:
+      - .:/var/www
+    working_dir: /var/www
+    command: php artisan queue:work
+    depends_on:
+      - db
+      - redis
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+  mailpit:
+    image: axllent/mailpit
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+volumes:
+  db_data:
